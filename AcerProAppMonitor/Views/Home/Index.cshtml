@@ -1,0 +1,148 @@
+﻿@{
+    ViewData["Title"] = "Home Page";
+}
+<div class="card">
+    <div class="card-header">
+        <h5>Target Apps</h5>
+
+
+        <div style="text-align:right;">
+            <button type="button" class="btn btn-success" onclick="OpenModal('@Url.Action("AddOrEdit","Home",null)','New App')">
+                <span class="navi-text">Create</span>
+            </button>
+        </div>
+
+    </div>
+    <div class="card-body">
+        <table class="table table-separate table-hover table-checkable" id="kt_datatable">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Url</th>
+                    <th>Interval</th>
+                    <th></th>
+                </tr>
+            </thead>
+        </table>
+    </div>
+</div>
+
+<div class="modal fade" id="form-modal" tabindex="-1" role="dialog" aria-labelledby="" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel"></h5>
+                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+            </div>
+        </div>
+    </div>
+</div>
+
+@section scripts{
+    <script>
+
+        var table = null;
+        jQuery(document).ready(function () {
+            table = $('#kt_datatable').DataTable({
+                responsive: true,
+                lengthMenu: [10, 25, 50, 100],
+                pageLength: 10,
+
+                ordering: false,
+                searchDelay: 500,
+                processing: true,
+                serverSide: false,
+                ajax: {
+                    url: '/Home/TargetAppList',
+                    type: 'Get',
+
+
+                },
+                columns: [
+                    { data: 'name' },
+                    { data: 'url' },
+                    { data: 'interval' },
+                    { data: 'id', responsivePriority: -1 },
+                ],
+                columnDefs: [
+                    {
+                        targets: -1,
+                        title: '',
+                        orderable: false,
+                        searchable: false,
+                        render: function (data, type, full, meta) {
+                            return '<a href="#" onclick="OpenModal(\'Home/AddOrEdit/' + data + '\',\'Edit App\')" class="btn btn-primary app_duzenle" data-id="' + data + '">\
+                                                                    <span class="navi-icon"><i class="fas fa-pen-nib text-info mr-5"></i></span>\
+                                                                    <span class="navi-text">Update</span>\
+                                                                </a>\
+                                                        <a href = "#" onclick="Delete('+ data + ')" class="btn btn-danger app_sil" data-id="' + data + '">\
+                                            <span class="navi-icon"> <i class="fas fa-pen-nib text-info mr-5"></i></span>\
+                                            <span class="navi-text"> Delete </span>\
+                                                </a>';
+                        },
+                    }
+                ]
+            });
+        });
+        function OpenModal(url, title) {
+            $.ajax({
+                type: "GET",
+                url: url,
+                success: function (res) {
+                    $('#form-modal .modal-body').html(res);
+                    $('#form-modal .modal-title').html(title);
+                    $('#form-modal').modal('show');
+                }
+            })
+
+        }
+        function AjaxPost(form) {
+            $.ajax({
+                type: "POST",
+                url: form.action,
+                data: new FormData(form),
+                contentType: false,
+                processData: false,
+                success: function (res) {
+                    if (res) {
+                        $('#form-modal').modal('hide');
+                        table.ajax.reload();
+                    }
+                    else {
+                        alert("Error");
+                    }
+                },
+                error: function (err) {
+                    alert("Error");
+                }
+            })
+            return false;
+        }
+        function Delete(id) {
+            if (confirm("Are you sure?") == true) {
+                $.ajax({
+                    type: "GET",
+                    url: "/Home/Delete/" + id,
+                    success: function (res) {
+                        if (res) {
+
+                            table.ajax.reload();
+                        }
+                        else {
+                            alert("Error");
+                        }
+                    },
+                    error: function (err) {
+                        alert("Error");
+                    }
+                })
+            }
+
+        }
+    </script>
+
+}
